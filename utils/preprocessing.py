@@ -34,7 +34,7 @@ class ECGDataProcessor:
         print(f"MIT-BIH dataset shape: {X_train.shape}")
         self._print_class_distribution("MIT-BIH", y_train)
 
-        return X_train, y_train,X_test, y_test
+        return X_train, y_train, X_test, y_test
 
     def _print_class_distribution(self, dataset_name, y):
         """

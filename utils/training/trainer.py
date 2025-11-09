@@ -9,6 +9,7 @@ import numpy as np
 import seaborn as sns
 import torch.nn as nn
 import math
+import torch.nn.functional as F
 
 class ModelTrainer:
     def __init__(self, model, model_name, device, criterion, config):
@@ -270,6 +271,28 @@ class SmoothCrossEntropyLoss(nn.Module):
         target_one_hot = torch.zeros_like(pred).scatter(1, target.unsqueeze(1), 1)
         smoothed_target = target_one_hot * (1 - self.smoothing) + self.smoothing / n_classes
         return torch.mean(torch.sum(-smoothed_target * torch.log_softmax(pred, dim=1), dim=1))
+
+class SmoothFocalLoss(nn.Module):
+    def __init__(self, smoothing=0.1, gamma=2.0):
+        super(SmoothFocalLoss, self).__init__()
+        self.smoothing = smoothing
+        self.gamma = gamma
+
+    def forward(self, pred, target):
+        n_classes = pred.size(1)
+        # One-hot encode targets
+        target_one_hot = torch.zeros_like(pred).scatter(1, target.unsqueeze(1), 1)
+        # Apply label smoothing
+        smoothed_target = target_one_hot * (1 - self.smoothing) + self.smoothing / n_classes
+        # Compute log probabilities
+        log_probs = F.log_softmax(pred, dim=1)
+        probs = torch.exp(log_probs)
+        # Focal modulation
+        focal_weight = (1 - probs) ** self.gamma
+        # Final loss
+        loss = -smoothed_target * focal_weight * log_probs
+        return torch.mean(torch.sum(loss, dim=1))
+
 
 class EarlyStopper:
     """
