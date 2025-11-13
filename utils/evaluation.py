@@ -1,6 +1,7 @@
 import torch
 
-def get_test_accuracy(model, test_loader, device, model_name=''):
+def get_test_accuracy(model, test_loader, model_name=''):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.eval()
     correct = 0
     total = 0
